@@ -15,7 +15,7 @@ public class TukanoRestServer {
 	final private static Logger Log = Logger.getLogger(TukanoRestServer.class.getName());
 
 	static final String INETADDR_ANY = "0.0.0.0";
-	static String SERVER_BASE_URI = "http://%s:%s/rest";
+	static String SERVER_BASE_URI = "http://0.0.0.0:%d/rest"; 
 
 	public static final int PORT = 8080;
 
@@ -26,7 +26,7 @@ public class TukanoRestServer {
 	}
 	
 	protected TukanoRestServer() {
-		serverURI = String.format(SERVER_BASE_URI, IP.hostname(), PORT);
+		serverURI = String.format(SERVER_BASE_URI, PORT);
 	}
 
 
