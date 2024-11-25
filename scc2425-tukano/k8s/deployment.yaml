@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tukano-app
+  labels:
+    app: tukano-app
+spec:
+  replicas: 1  # Number of Pod instances
+  selector:
+    matchLabels:
+      app: tukano-app
+  template:
+    metadata:
+      labels:
+        app: tukano-app
+    spec:
+      containers:
+      - name: tukano-container
+        image: tukano-app:latest  # Name of the Docker image
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080    # Port inside the container
+        env:
+        - name: DB_URL        # Optional : env variables
+          value: jdbc:postgresql://postgres-service:5432/tukano
+        - name: DB_USER
+          value: postgres
+        - name: DB_PASSWORD
+          value: secret
