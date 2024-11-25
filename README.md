@@ -8,7 +8,7 @@
 
 1. mvn clean package
 2. docker build -t tukano-app:latest .  (tukano-app ou wtv que achares fitting).
-3. docker run -it --rm -p 8080:8080 tukano-app:latest
+3. docker run -it --rm -p 8080:8080 tukano-app:latest (isto para testar localmente se o docker esta a funcionar)
 
 Já experimentei o REST API com Postman, e dá para dar e post e get de users.
 
