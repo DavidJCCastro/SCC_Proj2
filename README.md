@@ -337,10 +337,14 @@ Isso é feito no minio-service.yaml:
 
   output:
   http://192.168.49.2:30000   <---- Podes mandar pedidos a api a partir deste IP (não vai ser necessário, mas ta ai)
-  http://192.168.49.2:30001   <---- Abrir o webUI na maquina local
+  http://192.168.49.2:30001   <---- Abrir o webUI na maquina local (MinIO Console)
 
   Dps é só dar login com as credencias do minio-deployment.yaml
   username: minioadmin
   password: minioadmin
 
 O UI é actually fire
+
+Se for só dar um check básico para ver se esta a funcionar podes fazer só:
+
+kubectl exec -it <minio-deployment-pod> -- ls -la /data/tukano-blobs
