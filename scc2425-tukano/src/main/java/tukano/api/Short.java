@@ -1,5 +1,7 @@
 package tukano.api;
 
+import java.util.logging.Logger;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import tukano.impl.Token;
@@ -15,6 +17,9 @@ import tukano.impl.Token;
  */
 @Entity
 public class Short {
+
+	private static Logger Log = Logger.getLogger(Token.class.getName());
+
 	
 	@Id
 	String shortId;
@@ -85,7 +90,9 @@ public class Short {
 	}
 	
 	public Short copyWithLikes_And_Token( long totLikes) {
-		var urlWithToken = String.format("%s?token=%s", blobUrl, Token.get(blobUrl));
+		String token = Token.get(shortId);
+		var urlWithToken = String.format("%s?token=%s", blobUrl, token);
+		Log.info(String.format("Short Class: Token Generation - shortId: %s, token: %s\n", shortId, token));
 		return new Short( shortId, ownerId, urlWithToken, timestamp, (int)totLikes);
 	}	
 }
