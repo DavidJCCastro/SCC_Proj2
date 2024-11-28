@@ -31,6 +31,8 @@ spec:
           value: redis
         - name: REDIS_PORT
           value: "6380"
+        - name: CACHE_STATUS
+          value: ON
 
 ---
 

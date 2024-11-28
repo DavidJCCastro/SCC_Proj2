@@ -8,12 +8,15 @@ import static tukano.api.Result.errorOrVoid;
 import static tukano.api.Result.ok;
 import static tukano.api.Result.ErrorCode.BAD_REQUEST;
 import static tukano.api.Result.ErrorCode.FORBIDDEN;
+import static tukano.api.Result.ErrorCode.OK;
 import static utils.DB.getOne;
 
 import java.util.List;
 import java.util.UUID;
 import java.util.logging.Logger;
 
+import main.java.utils.JSON;
+import redis.clients.jedis.Jedis;
 import tukano.api.Blobs;
 import tukano.api.Result;
 import tukano.api.Short;
@@ -23,22 +26,26 @@ import tukano.impl.data.Following;
 import tukano.impl.data.Likes;
 import tukano.impl.rest.TukanoRestServer;
 import utils.DB;
+import utils.RedisCache;
 
 public class JavaShorts implements Shorts {
 
+	private static final String SHORTS_PREFIX = "shorts:";
+
+	private static final int SHORT_TTL = 5; // 5 seconds
+
 	private static Logger Log = Logger.getLogger(JavaShorts.class.getName());
-	
+
 	private static Shorts instance;
-	
+
 	synchronized public static Shorts getInstance() {
 		if( instance == null )
 			instance = new JavaShorts();
 		return instance;
 	}
-	
+
 	private JavaShorts() {}
-	
-	
+
 	@Override
 	public Result<Short> createShort(String userId, String password) {
 		Log.info(() -> format("createShort : userId = %s, pwd = %s\n", userId, password));
@@ -49,7 +56,16 @@ public class JavaShorts implements Shorts {
 			var blobUrl = format("%s/%s/%s", TukanoRestServer.serverURI, Blobs.NAME, shortId); 
 			var shrt = new Short(shortId, userId, blobUrl);
 
-			return errorOrValue(DB.insertOne(shrt), s -> s.copyWithLikes_And_Token(0));
+			return errorOrValue(DB.insertOne(shrt), s -> {
+				if(RedisCache.isEnabled()) {
+					try (Jedis jedis = RedisCache.getCachePool().getResource()) {
+						var key = SHORTS_PREFIX + shortId;
+						var value = JSON.encode(shrt);
+						jedis.set(key, value);
+						jedis.expire(key, SHORT_TTL);
+					}
+				}
+				return s.copyWithLikes_And_Token(0);});
 		});
 	}
 
@@ -62,7 +78,23 @@ public class JavaShorts implements Shorts {
 
 		var query = format("SELECT count(*) FROM Likes l WHERE l.shortId = '%s'", shortId);
 		var likes = DB.sql(query, Long.class);
-		return errorOrValue( getOne(shortId, Short.class), shrt -> shrt.copyWithLikes_And_Token( likes.get(0)));
+
+		Result<Short> res = null;
+
+		if( RedisCache.isEnabled() ) {
+			try (Jedis jedis = RedisCache.getCachePool().getResource()) {
+				var key = SHORTS_PREFIX + shortId;
+				var value = jedis.get(key);
+				if( value != null ) {
+					var shrt = JSON.decode(value, Short.class);
+					res = Result.ok(shrt);
+				}
+			}
+		}
+		if( res == null )
+			res = getOne(shortId, Short.class);
+		
+		return errorOrValue( res, shrt -> shrt.copyWithLikes_And_Token( likes.get(0)));
 	}
 
 	
