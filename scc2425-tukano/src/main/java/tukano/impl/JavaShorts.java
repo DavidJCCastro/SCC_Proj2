@@ -76,7 +76,7 @@ public class JavaShorts implements Shorts {
 		if( shortId == null )
 			return error(BAD_REQUEST);
 
-		var query = format("SELECT count(*) FROM Likes l WHERE l.shortId = '%s'", shortId);
+		var query = format("SELECT COUNT(*) FROM Likes WHERE shortId = '%s'", shortId);
 		var likes = DB.sql(query, Long.class);
 
 		Result<Short> res = null;
@@ -86,6 +86,7 @@ public class JavaShorts implements Shorts {
 				var key = SHORTS_PREFIX + shortId;
 				var value = jedis.get(key);
 				if( value != null ) {
+					jedis.expire(key, SHORT_TTL); // Reset TTL, may change later
 					var shrt = JSON.decode(value, Short.class);
 					res = Result.ok(shrt);
 				}
@@ -97,7 +98,7 @@ public class JavaShorts implements Shorts {
 		return errorOrValue( res, shrt -> shrt.copyWithLikes_And_Token( likes.get(0)));
 	}
 
-	
+
 	@Override
 	public Result<Void> deleteShort(String shortId, String password) {
 		Log.info(() -> format("deleteShort : shortId = %s, pwd = %s\n", shortId, password));
@@ -105,11 +106,16 @@ public class JavaShorts implements Shorts {
 		return errorOrResult( getShort(shortId), shrt -> {
 			
 			return errorOrResult( okUser( shrt.getOwnerId(), password), user -> {
+				if( RedisCache.isEnabled() ) {
+					try (Jedis jedis = RedisCache.getCachePool().getResource()) {
+						jedis.del(SHORTS_PREFIX + shortId);
+					}
+				}
 				return DB.transaction( hibernate -> {
 
 					hibernate.remove( shrt);
 					
-					var query = format("DELETE Likes l WHERE l.shortId = '%s'", shortId);
+					var query = format("DELETE FROM Likes WHERE shortId = '%s'", shortId);
 					hibernate.createNativeQuery( query, Likes.class).executeUpdate();
 					
 					JavaBlobs.getInstance().delete(shrt.getBlobUrl(), Token.get() );
@@ -122,7 +128,7 @@ public class JavaShorts implements Shorts {
 	public Result<List<String>> getShorts(String userId) {
 		Log.info(() -> format("getShorts : userId = %s\n", userId));
 
-		var query = format("SELECT s.shortId FROM Short s WHERE s.ownerId = '%s'", userId);
+		var query = format("SELECT shortId FROM Short WHERE ownerId = '%s'", userId);
 		return errorOrValue( okUser(userId), DB.sql( query, String.class));
 	}
 
@@ -141,7 +147,7 @@ public class JavaShorts implements Shorts {
 	public Result<List<String>> followers(String userId, String password) {
 		Log.info(() -> format("followers : userId = %s, pwd = %s\n", userId, password));
 
-		var query = format("SELECT f.follower FROM Following f WHERE f.followee = '%s'", userId);		
+		var query = format("SELECT follower FROM Following WHERE followee = '%s'", userId);
 		return errorOrValue( okUser(userId, password), DB.sql(query, String.class));
 	}
 
@@ -162,7 +168,7 @@ public class JavaShorts implements Shorts {
 
 		return errorOrResult( getShort(shortId), shrt -> {
 			
-			var query = format("SELECT l.userId FROM Likes l WHERE l.shortId = '%s'", shortId);					
+			var query = format("SELECT userId FROM Likes WHERE shortId = '%s'", shortId);					
 			
 			return errorOrValue( okUser( shrt.getOwnerId(), password ), DB.sql(query, String.class));
 		});
@@ -173,14 +179,12 @@ public class JavaShorts implements Shorts {
 		Log.info(() -> format("getFeed : userId = %s, pwd = %s\n", userId, password));
 
 		final var QUERY_FMT = """
-				SELECT s.shortId, s.timestamp FROM Short s WHERE	s.ownerId = '%s'				
-				UNION			
-				SELECT s.shortId, s.timestamp FROM Short s, Following f 
-					WHERE 
-						f.followee = s.ownerId AND f.follower = '%s' 
-				ORDER BY s.timestamp DESC""";
+				SELECT shortId 
+				FROM Short WHERE ownerId
+				IN (SELECT followee FROM Following WHERE follower = '%s')
+				ORDER BY timestamp DESC""";
 
-		return errorOrValue( okUser( userId, password), DB.sql( format(QUERY_FMT, userId, userId), String.class));		
+		return errorOrValue( okUser( userId, password), DB.sql( format(QUERY_FMT, userId), String.class));		
 	}
 		
 	protected Result<User> okUser( String userId, String pwd) {
@@ -205,15 +209,15 @@ public class JavaShorts implements Shorts {
 		return DB.transaction( (hibernate) -> {
 						
 			//delete shorts
-			var query1 = format("DELETE Short s WHERE s.ownerId = '%s'", userId);		
+			var query1 = format("DELETE FROM Short WHERE ownerId = '%s'", userId);		
 			hibernate.createQuery(query1, Short.class).executeUpdate();
 			
 			//delete follows
-			var query2 = format("DELETE Following f WHERE f.follower = '%s' OR f.followee = '%s'", userId, userId);		
+			var query2 = format("DELETE FROM Following WHERE follower = '%s' OR followee = '%s'", userId, userId);		
 			hibernate.createQuery(query2, Following.class).executeUpdate();
 			
 			//delete likes
-			var query3 = format("DELETE Likes l WHERE l.ownerId = '%s' OR l.userId = '%s'", userId, userId);		
+			var query3 = format("DELETE FROM Like WHERE ownerId = '%s' OR userId = '%s'", userId, userId);		
 			hibernate.createQuery(query3, Likes.class).executeUpdate();
 			
 		});
