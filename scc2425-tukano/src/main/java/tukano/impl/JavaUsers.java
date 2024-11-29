@@ -3,7 +3,6 @@ package tukano.impl;
 import static java.lang.String.format;
 import static tukano.api.Result.error;
 import static tukano.api.Result.errorOrResult;
-import static tukano.api.Result.errorOrValue;
 import static tukano.api.Result.ok;
 import static tukano.api.Result.ErrorCode.BAD_REQUEST;
 import static tukano.api.Result.ErrorCode.FORBIDDEN;
@@ -152,8 +151,7 @@ public class JavaUsers implements Users {
 			try (Jedis jedis = RedisCache.getCachePool().getResource()) {
 				var key = USERS_PREFIX + user.getUserId();
 				var value = JSON.encode(user);
-				jedis.set(key, value);
-				jedis.expire(key, USER_TTL);
+				jedis.setex(key, USER_TTL, value);
 			}
 		}
 	}

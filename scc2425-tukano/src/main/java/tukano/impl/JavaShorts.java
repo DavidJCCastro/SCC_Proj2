@@ -8,7 +8,6 @@ import static tukano.api.Result.errorOrVoid;
 import static tukano.api.Result.ok;
 import static tukano.api.Result.ErrorCode.BAD_REQUEST;
 import static tukano.api.Result.ErrorCode.FORBIDDEN;
-import static tukano.api.Result.ErrorCode.OK;
 import static utils.DB.getOne;
 
 import java.util.List;
@@ -61,8 +60,7 @@ public class JavaShorts implements Shorts {
 					try (Jedis jedis = RedisCache.getCachePool().getResource()) {
 						var key = SHORTS_PREFIX + shortId;
 						var value = JSON.encode(shrt);
-						jedis.set(key, value);
-						jedis.expire(key, SHORT_TTL);
+						jedis.setex(key, SHORT_TTL, value);
 					}
 				}
 				return s.copyWithLikes_And_Token(0);});
