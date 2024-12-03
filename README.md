@@ -25,8 +25,9 @@ minikube image load tukano-app:latest
 Applying the YAML files (deploying the app using YAML files):
 
 kubectl apply -f <path-to-yaml-file>
-kubectl apply -f k8s/deployment.yaml
-kubectl apply -f k8s/service.yaml
+kubectl apply -f k8s/postgres.yaml
+kubectl apply -f k8s/tukano_webapp.yaml
+kubectl apply -f k8s/redis.yaml
 
 Getting the service URL (URL to access the app):
 
