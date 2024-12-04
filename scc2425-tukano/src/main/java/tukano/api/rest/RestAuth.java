@@ -15,7 +15,7 @@ public interface RestAuth {
 	static final String PWD = "password";
 
     @POST
-    Response login( @FormParam(USER) String userId, @FormParam(PWD) String password );
+    void login( @FormParam(USER) String userId, @FormParam(PWD) String password );
 
     @GET
 	@Produces(MediaType.TEXT_HTML)

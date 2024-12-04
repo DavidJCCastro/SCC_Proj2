@@ -56,13 +56,12 @@ public class JavaShorts implements Shorts {
 			var shrt = new Short(shortId, userId, blobUrl);
 
 			return errorOrValue(DB.insertOne(shrt), s -> {
-				if(RedisCache.isEnabled()) {
-					try (Jedis jedis = RedisCache.getCachePool().getResource()) {
-						var key = SHORTS_PREFIX + shortId;
-						var value = JSON.encode(shrt);
-						jedis.setex(key, SHORT_TTL, value);
-					}
+				try (Jedis jedis = RedisCache.getCachePool().getResource()) {
+					var key = SHORTS_PREFIX + shortId;
+					var value = JSON.encode(shrt);
+					jedis.setex(key, SHORT_TTL, value);
 				}
+				
 				return s.copyWithLikes_And_Token(0);});
 		});
 	}
@@ -79,17 +78,16 @@ public class JavaShorts implements Shorts {
 
 		Result<Short> res = null;
 
-		if( RedisCache.isEnabled() ) {
-			try (Jedis jedis = RedisCache.getCachePool().getResource()) {
-				var key = SHORTS_PREFIX + shortId;
-				var value = jedis.get(key);
-				if( value != null ) {
-					jedis.expire(key, SHORT_TTL); // Reset TTL, may change later
-					var shrt = JSON.decode(value, Short.class);
-					res = Result.ok(shrt);
-				}
+		try (Jedis jedis = RedisCache.getCachePool().getResource()) {
+			var key = SHORTS_PREFIX + shortId;
+			var value = jedis.get(key);
+			if( value != null ) {
+				jedis.expire(key, SHORT_TTL); // Reset TTL, may change later
+				var shrt = JSON.decode(value, Short.class);
+				res = Result.ok(shrt);
 			}
 		}
+		
 		if( res == null )
 			res = getOne(shortId, Short.class);
 		
@@ -104,11 +102,10 @@ public class JavaShorts implements Shorts {
 		return errorOrResult( getShort(shortId), shrt -> {
 			
 			return errorOrResult( okUser( shrt.getOwnerId(), password), user -> {
-				if( RedisCache.isEnabled() ) {
-					try (Jedis jedis = RedisCache.getCachePool().getResource()) {
-						jedis.del(SHORTS_PREFIX + shortId);
-					}
+				try (Jedis jedis = RedisCache.getCachePool().getResource()) {
+					jedis.del(SHORTS_PREFIX + shortId);
 				}
+				
 				return DB.transaction( hibernate -> {
 
 					hibernate.remove( shrt);

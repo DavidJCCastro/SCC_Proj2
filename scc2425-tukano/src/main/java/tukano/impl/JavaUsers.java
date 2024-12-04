@@ -87,11 +87,10 @@ public class JavaUsers implements Users {
 
 		return errorOrResult( validatedUserOrError(getUser(userId), pwd), user -> {
 
-			if(RedisCache.isEnabled()) {
-				try (Jedis jedis = RedisCache.getCachePool().getResource()) {
-					jedis.del(USERS_PREFIX + userId);
-				}		
-			}
+			try (Jedis jedis = RedisCache.getCachePool().getResource()) {
+				jedis.del(USERS_PREFIX + userId);
+			}		
+			
 			// Delete user shorts and related info asynchronously in a separate thread
 			Executors.defaultThreadFactory().newThread( () -> {
 				JavaShorts.getInstance().deleteAllShorts(userId, pwd, Token.get(userId));
@@ -132,27 +131,24 @@ public class JavaUsers implements Users {
 	}
 
 	private Result<User> getUser (String userId) {
-		if(RedisCache.isEnabled()) {
-			try (Jedis jedis = RedisCache.getCachePool().getResource()) {
-				var key = USERS_PREFIX + userId;
-				var value = jedis.get(key);
-				if (value != null) {
-					jedis.expire(key, USER_TTL);
-					return Result.ok(JSON.decode(value, User.class));
-				}
+		try (Jedis jedis = RedisCache.getCachePool().getResource()) {
+			var key = USERS_PREFIX + userId;
+			var value = jedis.get(key);
+			if (value != null) {
+				jedis.expire(key, USER_TTL);
+				return Result.ok(JSON.decode(value, User.class));
 			}
 		}
+		
 		return DB.getOne(userId, User.class);
 
 	}
 
 	private void cacheUser(User user) {
-		if(RedisCache.isEnabled()) {
 			try (Jedis jedis = RedisCache.getCachePool().getResource()) {
 				var key = USERS_PREFIX + user.getUserId();
 				var value = JSON.encode(user);
 				jedis.setex(key, USER_TTL, value);
 			}
-		}
 	}
 }
