@@ -33,6 +33,7 @@ public class TukanoRestServer {
         config.register(RestBlobsResource.class);
         config.register(RestUsersResource.class);
         config.register(RestShortsResource.class);
+        config.register(RestAuthResource.class);
 
         JdkHttpServerFactory.createHttpServer(URI.create(serverURI), config); 
         Log.info(String.format("Tukano Server ready @ %s\n", serverURI));

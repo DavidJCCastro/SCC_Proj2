@@ -1,5 +1,7 @@
 package tukano.api;
 
+import jakarta.ws.rs.core.Response;
+
 public interface Auth {
 
     String NAME = "auth";
@@ -10,7 +12,7 @@ public interface Auth {
      * @param password - Password for that user
      * @return redirect response
      */
-    Result<Void> login(String userId, String password );
+    Result<Response> login(String userId, String password );
 
     /**
      * Returns the login page

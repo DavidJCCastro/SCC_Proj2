@@ -1,7 +1,7 @@
 package tukano.impl.rest;
 
 import jakarta.ws.rs.Path;
-
+import jakarta.ws.rs.core.Response;
 import tukano.api.Auth;
 import tukano.api.rest.RestAuth;
 import tukano.impl.JavaAuth;
@@ -11,8 +11,8 @@ public class RestAuthResource extends RestResource implements RestAuth {
 	static final Auth impl = JavaAuth.getInstance();
 
 	@Override
-	public void login(String userId, String password) {
-		super.resultOrThrow(impl.login(userId, password));
+	public Response login(String userId, String password) {
+		return super.resultOrThrow(impl.login(userId, password));
 	}
 
 	@Override
