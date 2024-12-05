@@ -19,6 +19,8 @@ public class JavaBlobs implements Blobs {
 	private static Blobs instance;
 	private static Logger Log = Logger.getLogger(JavaBlobs.class.getName());
 
+	private static final String ADMIN = "admin";	// Only admin can delete
+
 	public String baseURI;
 	private BlobStorage storage;
 	
@@ -37,6 +39,12 @@ public class JavaBlobs implements Blobs {
 	public Result<Void> upload(String blobId, byte[] bytes, String token) {
 		Log.info(() -> format("upload : blobId = %s, sha256 = %s, token = %s\n", blobId, Hex.of(Hash.sha256(bytes)), token));
 
+		String shortId = blobId.substring(baseURI.length());
+		String userId = shortId.split("\\+")[0];
+
+		if( ! JavaAuth.validateSession(userId).isOK() )
+			return error(FORBIDDEN);
+
 		if (!validBlobId(blobId, token))
 			return error(FORBIDDEN);
 
@@ -46,6 +54,9 @@ public class JavaBlobs implements Blobs {
 	@Override
 	public Result<byte[]> download(String blobId, String token) {
 		Log.info(() -> format("download : blobId = %s, token=%s\n", blobId, token));
+		
+		if ( ! JavaAuth.validateSession().isOK() )
+			return error(FORBIDDEN);
 
 		if( ! validBlobId( blobId, token ) )
 			return error(FORBIDDEN);
@@ -56,6 +67,10 @@ public class JavaBlobs implements Blobs {
 	@Override
 	public Result<Void> delete(String blobId, String token) {
 		Log.info(() -> format("delete : blobId = %s, token=%s\n", blobId, token));
+		
+		if( ! JavaAuth.validateSession(ADMIN).isOK() )
+			return error(FORBIDDEN);
+
 	
 		if( ! validBlobId( blobId, token ) )
 			return error(FORBIDDEN);
@@ -66,6 +81,9 @@ public class JavaBlobs implements Blobs {
 	@Override
 	public Result<Void> deleteAllBlobs(String userId, String token) {
 		Log.info(() -> format("deleteAllBlobs : userId = %s, token=%s\n", userId, token));
+
+		if( ! JavaAuth.validateSession(ADMIN).isOK() )
+			return error(FORBIDDEN);
 
 		if( ! Token.isValid( token, userId ) )
 			return error(FORBIDDEN);

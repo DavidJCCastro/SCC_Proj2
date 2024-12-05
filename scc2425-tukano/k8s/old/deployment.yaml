@@ -27,3 +27,6 @@ spec:
           value: postgres
         - name: DB_PASSWORD
           value: secret
+        - name: REDIS_URL
+          value: redis:6380
+          

@@ -24,7 +24,6 @@ import tukano.api.User;
 import tukano.impl.data.Following;
 import tukano.impl.data.Likes;
 import tukano.impl.rest.TukanoRestServer;
-import tukano.impl.rest.utils.RequestCookies;
 import utils.DB;
 import utils.RedisCache;
 
@@ -49,8 +48,6 @@ public class JavaShorts implements Shorts {
 	@Override
 	public Result<Short> createShort(String userId, String password) {
 		Log.info(() -> format("createShort : userId = %s, pwd = %s\n", userId, password));
-
-		var cookies = RequestCookies.get();
 
 		return errorOrResult( okUser(userId, password), user -> {
 			

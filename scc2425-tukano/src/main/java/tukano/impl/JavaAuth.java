@@ -14,7 +14,10 @@ import redis.clients.jedis.Jedis;
 import tukano.api.Auth;
 import tukano.api.Result;
 import utils.RedisCache;
+
+import static tukano.api.Result.ErrorCode.FORBIDDEN;
 import static tukano.api.Result.ErrorCode.INTERNAL_ERROR;
+import static tukano.api.Result.ErrorCode.NOT_FOUND;
 import static tukano.api.Result.error;
 
 
@@ -79,27 +82,49 @@ public class JavaAuth implements Auth {
 		}
 	}
 
-    static public String validateSession(String userId) throws NotAuthorizedException {
+
+    // These 2 functions to verify a cookie is valid (a user is logged in -- any user)
+
+    static public Result<String> validateSession() {
 		var cookies = RequestCookies.get();
-		return validateSession( cookies.get(COOKIE_KEY), userId );
+		return validateSession( cookies.get(COOKIE_KEY));
 	}
 	
-	static public String validateSession(Cookie cookie, String userId) throws NotAuthorizedException {
+	static public Result<String> validateSession(Cookie cookie) {
 
 		if (cookie == null )
-			throw new NotAuthorizedException("No session initialized");
+            return Result.error(NOT_FOUND);
 		
 		var cookieOwner = "";
         try (Jedis jedis = RedisCache.getCachePool().getResource()) {
             cookieOwner = jedis.get(cookie.getValue());
         }
 			
-		if (cookieOwner == null || cookieOwner.length() == 0) 
-			throw new NotAuthorizedException("No valid session initialized");
+		if (cookieOwner == null || cookieOwner.length() == 0)
+            return Result.error(NOT_FOUND);
 		
-		if (!cookieOwner.equals(userId))
-			throw new NotAuthorizedException("Invalid user : " + cookieOwner);
-		
-		return cookieOwner;
+		return Result.ok(cookieOwner);
 	}
+
+    // These 2 functions to verify the cookie belongs to the user (the specific user is logged in)
+
+    static public Result<String> validateSession(String userId) {
+		var cookies = RequestCookies.get();
+		return validateSession( cookies.get(COOKIE_KEY), userId );
+	}
+
+    static public Result<String> validateSession(Cookie cookie, String userId) {
+
+        var sessionResult = validateSession(cookie);
+
+        if(!sessionResult.isOK())
+            return sessionResult;
+
+        var cookieOwner = sessionResult.value();
+
+        if (!cookieOwner.equals(userId))
+            return Result.error(FORBIDDEN);
+
+        return Result.ok(cookieOwner);
+    }
 }
