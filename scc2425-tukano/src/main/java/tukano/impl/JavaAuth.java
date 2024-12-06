@@ -1,24 +1,21 @@
 package tukano.impl;
 
 import static java.lang.String.format;
-
 import java.util.UUID;
 import java.util.logging.Logger;
 
-import jakarta.ws.rs.NotAuthorizedException;
 import jakarta.ws.rs.core.Cookie;
 import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.core.Response;
-import main.java.tukano.impl.rest.utils.RequestCookies;
 import redis.clients.jedis.Jedis;
 import tukano.api.Auth;
 import tukano.api.Result;
-import utils.RedisCache;
-
 import static tukano.api.Result.ErrorCode.FORBIDDEN;
 import static tukano.api.Result.ErrorCode.INTERNAL_ERROR;
 import static tukano.api.Result.ErrorCode.NOT_FOUND;
 import static tukano.api.Result.error;
+import tukano.impl.auth.RequestCookies;
+import utils.RedisCache;
 
 
 

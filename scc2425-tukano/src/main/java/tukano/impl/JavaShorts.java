@@ -1,23 +1,20 @@
 package tukano.impl;
 
 import static java.lang.String.format;
+import java.util.List;
+import java.util.UUID;
+import java.util.logging.Logger;
+
+import redis.clients.jedis.Jedis;
+import tukano.api.Blobs;
+import tukano.api.Result;
+import static tukano.api.Result.ErrorCode.BAD_REQUEST;
+import static tukano.api.Result.ErrorCode.FORBIDDEN;
 import static tukano.api.Result.error;
 import static tukano.api.Result.errorOrResult;
 import static tukano.api.Result.errorOrValue;
 import static tukano.api.Result.errorOrVoid;
 import static tukano.api.Result.ok;
-import static tukano.api.Result.ErrorCode.BAD_REQUEST;
-import static tukano.api.Result.ErrorCode.FORBIDDEN;
-import static utils.DB.getOne;
-
-import java.util.List;
-import java.util.UUID;
-import java.util.logging.Logger;
-
-import main.java.utils.JSON;
-import redis.clients.jedis.Jedis;
-import tukano.api.Blobs;
-import tukano.api.Result;
 import tukano.api.Short;
 import tukano.api.Shorts;
 import tukano.api.User;
@@ -25,6 +22,8 @@ import tukano.impl.data.Following;
 import tukano.impl.data.Likes;
 import tukano.impl.rest.TukanoRestServer;
 import utils.DB;
+import static utils.DB.getOne;
+import utils.JSON;
 import utils.RedisCache;
 
 public class JavaShorts implements Shorts {

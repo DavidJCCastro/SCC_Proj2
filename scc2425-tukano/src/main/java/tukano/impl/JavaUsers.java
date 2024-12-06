@@ -1,23 +1,22 @@
 package tukano.impl;
 
 import static java.lang.String.format;
-import static tukano.api.Result.error;
-import static tukano.api.Result.errorOrResult;
-import static tukano.api.Result.ok;
-import static tukano.api.Result.ErrorCode.BAD_REQUEST;
-import static tukano.api.Result.ErrorCode.FORBIDDEN;
-
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
-import main.java.utils.JSON;
-import main.java.utils.RedisCache;
 import redis.clients.jedis.Jedis;
 import tukano.api.Result;
+import static tukano.api.Result.ErrorCode.BAD_REQUEST;
+import static tukano.api.Result.ErrorCode.FORBIDDEN;
+import static tukano.api.Result.error;
+import static tukano.api.Result.errorOrResult;
+import static tukano.api.Result.ok;
 import tukano.api.User;
 import tukano.api.Users;
 import utils.DB;
+import utils.JSON;
+import utils.RedisCache;
 
 public class JavaUsers implements Users {
 

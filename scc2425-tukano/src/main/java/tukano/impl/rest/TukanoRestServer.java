@@ -9,11 +9,10 @@ import org.glassfish.jersey.jdkhttp.JdkHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import jakarta.ws.rs.core.Application;
-import main.java.utils.Props;
 import tukano.impl.Token;
 import tukano.impl.auth.RequestCookiesCleanupFilter;
 import tukano.impl.auth.RequestCookiesFilter;
-import utils.Args;
+import utils.Props;
 
 public class TukanoRestServer extends Application {
     final private static Logger Log = Logger.getLogger(TukanoRestServer.class.getName());
