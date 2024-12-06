@@ -20,12 +20,12 @@ public interface RestBlobs {
 	String BLOBS = "blobs";
 	String USER_ID = "userId";
 
- 	@POST
- 	@Path("/{" + BLOB_ID +"}")
- 	@Consumes(MediaType.APPLICATION_OCTET_STREAM)
-	void upload(@PathParam(BLOB_ID) String blobId, byte[] bytes, @QueryParam(TOKEN) String token);
+	@POST
+	@Path("/{" + BLOB_ID +"}")
+	@Consumes({MediaType.APPLICATION_OCTET_STREAM, MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+   	void upload(@PathParam(BLOB_ID) String blobId, byte[] bytes, @QueryParam(TOKEN) String token);
 
-
+	
  	@GET
  	@Path("/{" + BLOB_ID +"}") 	
  	@Produces(MediaType.APPLICATION_OCTET_STREAM)

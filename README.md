@@ -214,3 +214,138 @@ Apagar o Pod do Postegres:
 kubectl delete pod <postgres-pod-name>
 Esperar um bit e tentar dar get do user.
 
+
+----todos os deploys
+
+mvn clean package
+docker build -t tukano-app:latest .
+minikube start
+kubectl delete deployments,services,pods --all
+kubectl delete pv,pvc --all
+-----
+minikube ssh
+
+docker rmi tukano-app:latest
+exit
+----
+minikube image load tukano-app:latest
+kubectl apply -f k8s/deployment.yaml
+kubectl apply -f k8s/service.yaml
+kubectl apply -f k8s/postgres-pvc.yaml
+kubectl apply -f k8s/postgres-deployment.yaml
+kubectl apply -f k8s/postgres-service.yaml
+kubectl apply -f k8s/minio-pvc.yaml
+kubectl apply -f k8s/minio-deployment.yaml
+kubectl apply -f k8s/minio-service.yaml
+
+if needed:
+minikube service tukano-service
+
+xrandr --output HDMI-0 --scale 0.75x0.75
+
+
+------
+
+Right now os secrets estão hardcoded nos yamls. Por enquanto isso n faz diferença nenhuma. Mas num futuro sq fazemos isto:
+
+Exemplo para o minio:
+
+Em vez de ter isto:
+env:
+...
+- name: S3_ENDPOINT
+  value: "http://minio-service:9000"
+- name: S3_ACCESS_KEY
+  value: "minioadmin"
+- name: S3_SECRET_KEY
+  value: "minioadmin"
+- name: S3_BUCKET
+  value: "tukano-blobs"
+...
+
+ter isto:
+env:
+...
+- name: S3_ENDPOINT
+  value: "http://minio-service:9000"
+- name: S3_ACCESS_KEY
+  valueFrom:
+    secretKeyRef:
+      name: s3-credentials
+      key: S3_ACCESS_KEY
+- name: S3_SECRET_KEY
+  valueFrom:
+    secretKeyRef:
+      name: s3-credentials
+      key: S3_SECRET_KEY
+- name: S3_BUCKET
+  value: "tukano-blobs"
+  ...
+
+  e dar set dos secrets assim:
+  kubectl create secret generic s3-credentials \
+  --from-literal=S3_ACCESS_KEY=minioadmin \
+  --from-literal=S3_SECRET_KEY=minioadmin
+
+
+------
+
+Tip para visualização da storage.
+
+Após o deployment e aplicação das configs, recomendo dar um kubectl get service , pods, etc só para checkar se está tudo normal.
+
+Dps do kubectl get pods, dar copy no nome do minio-deployment e fazer:
+
+kubectl logs <minio-deployment>
+o output vai ser algo do genero:
+INFO: WARNING: MINIO_ACCESS_KEY and MINIO_SECRET_KEY are deprecated.
+         Please use MINIO_ROOT_USER and MINIO_ROOT_PASSWORD
+MinIO Object Storage Server
+Copyright: 2015-2024 MinIO, Inc.
+License: GNU AGPLv3 - https://www.gnu.org/licenses/agpl-3.0.html
+Version: RELEASE.2024-11-07T00-52-20Z (go1.23.3 linux/amd64)
+
+API: http://10.244.0.119:9000  http://127.0.0.1:9000 
+WebUI: http://10.244.0.119:36721 http://127.0.0.1:36721   
+
+Docs: https://docs.min.io
+WARN: Detected default credentials 'minioadmin:minioadmin', we recommend that you change these values with 'MINIO_ROOT_USER' and 'MINIO_ROOT_PASSWORD' environment variables
+
+O importante é esta linha:
+WebUI: http://10.244.0.119:36721 http://127.0.0.1:36721   
+Isto aqui diz o port e o ip para aceder ao webUI dentro do cluster, (meaning que este port "36721" está mapped dentro do cluster) então para aceder a esse webUI fora do cluster é necessário expor o port para a nossa maquina.
+
+Isso é feito no minio-service.yaml:
+
+ ports:
+    - protocol: TCP
+      port: 9000
+      targetPort: 9000
+      nodePort: 30000
+      name: api-port
+    - protocol: TCP
+      targetPort: 36721  <---- já troquei aqui
+      port: 36721        <----
+      nodePort: 30001    <---- E aqui estou a dizer que posso me conectar ao (36721) a partir do port 30001 na minha máquina
+      name: web-ui-port
+  type: NodePort
+
+  Dar save deste file e fazer:
+  kubectl apply -f k8s/minio-service.yaml
+
+  Finalmente:
+  minikube service minio-service --url
+
+  output:
+  http://192.168.49.2:30000   <---- Podes mandar pedidos a api a partir deste IP (não vai ser necessário, mas ta ai)
+  http://192.168.49.2:30001   <---- Abrir o webUI na maquina local (MinIO Console)
+
+  Dps é só dar login com as credencias do minio-deployment.yaml
+  username: minioadmin
+  password: minioadmin
+
+O UI é actually fire
+
+Se for só dar um check básico para ver se esta a funcionar podes fazer só:
+
+kubectl exec -it <minio-deployment-pod> -- ls -la /data/tukano-blobs
