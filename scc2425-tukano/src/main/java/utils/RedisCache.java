@@ -1,34 +1,82 @@
 package utils;
 
+import java.time.Duration;
+import java.util.logging.Logger;
+
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 
 public class RedisCache {
-	private static final String REDIS_HOSTNAME = System.getenv("REDIS_HOSTNAME");
-	private static final int REDIS_PORT = Integer.parseInt(System.getenv("REDIS_PORT"));
-	public static final String CACHE_STATUS = System.getenv("CACHE_STATUS");
-	private static final int REDIS_TIMEOUT = 1000;
-	private static final boolean Redis_USE_TLS = true;
-	
+	private static final Logger Log = Logger.getLogger(RedisCache.class.getName());
+	private static final String REDIS_HOSTNAME;
+	private static final int REDIS_PORT;
+	public static final String CACHE_STATUS;
+	private static final int REDIS_TIMEOUT = 3000;
+	private static final boolean Redis_USE_TLS = false;
 	private static JedisPool instance;
-	
+
+	static {
+		REDIS_HOSTNAME = System.getenv("REDIS_HOSTNAME");
+		CACHE_STATUS = System.getenv("CACHE_STATUS");
+
+		if (REDIS_HOSTNAME == null || REDIS_HOSTNAME.isEmpty()) {
+			throw new IllegalArgumentException("REDIS_HOSTNAME environment variable is not set or is empty.");
+		}
+
+		if (CACHE_STATUS == null || CACHE_STATUS.isEmpty()) {
+			throw new IllegalArgumentException("CACHE_STATUS environment variable is not set or is empty.");
+		}
+
+		try {
+			String redisPortEnv = System.getenv("REDIS_PORT");
+			if (redisPortEnv == null || redisPortEnv.isEmpty()) {
+				throw new IllegalArgumentException("REDIS_PORT environment variable is not set or is empty.");
+			}
+			REDIS_PORT = Integer.parseInt(redisPortEnv.replace(",", "").trim());
+		} catch (NumberFormatException e) {
+			throw new IllegalArgumentException("Invalid REDIS_PORT environment variable. Must be a valid integer.", e);
+		}
+	}
+
 	public synchronized static JedisPool getCachePool() {
-		if( instance != null)
+		Log.info("Initializing Redis connection pool...");
+		Log.info(() -> String.format("REDIS_HOSTNAME: %s", REDIS_HOSTNAME));
+		Log.info(() -> String.format("REDIS_PORT: %d", REDIS_PORT));
+		Log.info(() -> String.format("CACHE_STATUS: %s", CACHE_STATUS));
+		Log.info(() -> String.format("REDIS_TIMEOUT: %d", REDIS_TIMEOUT));
+		Log.info(() -> String.format("Redis_USE_TLS: %b", Redis_USE_TLS));
+
+		if (instance != null) {
+			Log.info("Redis connection pool already initialized.");
 			return instance;
-		
-		var poolConfig = new JedisPoolConfig();
-		poolConfig.setMaxTotal(128);
-		poolConfig.setMaxIdle(128);
-		poolConfig.setMinIdle(16);
-		poolConfig.setTestOnBorrow(true);
-		poolConfig.setTestOnReturn(true);
-		poolConfig.setTestWhileIdle(true);
-		poolConfig.setNumTestsPerEvictionRun(3);
-		poolConfig.setBlockWhenExhausted(true);
-		instance = new JedisPool(poolConfig, REDIS_HOSTNAME, REDIS_PORT, REDIS_TIMEOUT, Redis_USE_TLS);
+		}
+
+		try {
+			var poolConfig = new JedisPoolConfig();
+			poolConfig.setMaxTotal(128); // Max total connections
+			poolConfig.setMaxIdle(64); // Max idle connections
+			poolConfig.setMinIdle(16); // Min idle connections
+			poolConfig.setTestOnBorrow(true); // Validate connection before borrowing
+			poolConfig.setTestOnReturn(true); // Validate connection after returning
+			poolConfig.setTestWhileIdle(true); // Validate idle connections
+			poolConfig.setNumTestsPerEvictionRun(3); // Number of tests per eviction run
+			poolConfig.setBlockWhenExhausted(true); // Wait for connection if exhausted
+
+			// Increase wait time for connections
+			poolConfig.setMaxWait(Duration.ofMillis(20000));
+			
+			Log.info("Creating new Redis connection pool...");
+			instance = new JedisPool(poolConfig, REDIS_HOSTNAME, REDIS_PORT, REDIS_TIMEOUT, Redis_USE_TLS);
+			Log.info("Redis connection pool created successfully.");
+		} catch (Exception e) {
+			Log.severe("Error initializing Redis connection pool: " + e.getMessage());
+			throw e;
+		}
+
 		return instance;
 	}
+
 	public static boolean isEnabled() {
-		return CACHE_STATUS.equals("ON");
+		return CACHE_STATUS.equalsIgnoreCase("ON");
 	}
 }

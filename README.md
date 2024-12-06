@@ -238,12 +238,23 @@ kubectl apply -f k8s/minio-pvc.yaml
 kubectl apply -f k8s/minio-deployment.yaml
 kubectl apply -f k8s/minio-service.yaml
 
-if needed:
 minikube service tukano-service
 
-xrandr --output HDMI-0 --scale 0.75x0.75
 
+v2
 
+mvn clean package
+docker build -t tukano-app:latest .
+minikube start
+kubectl delete deployments,services,pods --all
+kubectl delete pv,pvc --all
+minikube image load tukano-app:latest
+kubectl apply -f k8s/tukano_webapp.yaml
+kubectl apply -f k8s/postgres.yaml
+kubectl apply -f k8s/storage-minio.yaml
+kubectl apply -f k8s/redis.yaml
+
+minikube service tukano-service
 ------
 
 Right now os secrets estão hardcoded nos yamls. Por enquanto isso n faz diferença nenhuma. Mas num futuro sq fazemos isto:

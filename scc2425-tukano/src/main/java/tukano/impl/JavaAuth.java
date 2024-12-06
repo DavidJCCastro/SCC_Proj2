@@ -42,8 +42,11 @@ public class JavaAuth implements Auth {
     public Result<Response> login(String userId, String password ) {
 		Log.info(() -> format("login : userId = %s, pwd = %s\n", userId, password));
 		var pwdOk = JavaUsers.getInstance().getUser(userId, password);
-		if (!pwdOk.isOK())
+
+		if (!pwdOk.isOK()){
+            Log.severe("Login failed: Invalid credentials.");
             return error(pwdOk.error());
+        }
 
         String uid = UUID.randomUUID().toString();
         var cookie = new NewCookie.Builder(COOKIE_KEY)
@@ -56,6 +59,10 @@ public class JavaAuth implements Auth {
         
         try (Jedis jedis = RedisCache.getCachePool().getResource()) {
             jedis.setex(cookie.getValue(), MAX_COOKIE_AGE, userId);
+            Log.info("Session stored in Redis: " + cookie.getValue() + " -> " + userId);
+        } catch (Exception e) {
+            Log.severe("Redis error during session storage: " + e.getMessage());
+            return Result.error(INTERNAL_ERROR);
         }
         /**
          * A logica de manter e cookie e guardada no cliente. So tenho de manter o mapping de uid/userId na cache com o record.
@@ -75,6 +82,7 @@ public class JavaAuth implements Auth {
 			var in = getClass().getClassLoader().getResourceAsStream(LOGIN_PAGE);
 			return  Result.ok(new String( in.readAllBytes()));			
 		} catch( Exception x ) {
+            Log.severe("Error reading login page: " + x.getMessage());
 			return Result.error( INTERNAL_ERROR );
 		}
 	}
@@ -88,21 +96,29 @@ public class JavaAuth implements Auth {
 	}
 	
 	static public Result<String> validateSession(Cookie cookie) {
-
-		if (cookie == null )
+        if (cookie == null) {
+            Log.severe("Session validation failed: No session cookie found.");
             return Result.error(NOT_FOUND);
-		
-		var cookieOwner = "";
-        try (Jedis jedis = RedisCache.getCachePool().getResource()) {
-            cookieOwner = jedis.get(cookie.getValue());
         }
-			
-		if (cookieOwner == null || cookieOwner.length() == 0)
+    
+        final String[] cookieOwner = {""};
+        try (Jedis jedis = RedisCache.getCachePool().getResource()) {
+            cookieOwner[0] = jedis.get(cookie.getValue());
+            Log.info(() -> "Cookie value: " + cookie.getValue() + "Cookie owner: " + cookieOwner[0]);
+        } catch (Exception e) {
+            Log.severe("Redis error during session validation: " + e.getMessage());
+            return Result.error(INTERNAL_ERROR);
+        }
+    
+        if (cookieOwner[0] == null || cookieOwner[0].isEmpty()) {
+            Log.severe("Session validation failed: Cookie owner not found or empty.");
             return Result.error(NOT_FOUND);
-		
-		return Result.ok(cookieOwner);
-	}
-
+        }
+    
+        Log.info(() -> "Session validation succeeded: Cookie owner is " + cookieOwner[0]);
+        return Result.ok(cookieOwner[0]);
+    }
+    
     // These 2 functions to verify the cookie belongs to the user (the specific user is logged in)
 
     static public Result<String> validateSession(String userId) {
@@ -119,9 +135,12 @@ public class JavaAuth implements Auth {
 
         var cookieOwner = sessionResult.value();
 
-        if (!cookieOwner.equals(userId))
-            return Result.error(FORBIDDEN);
+        Log.info(() -> "Session validation: Cookie owner is " + cookieOwner + ", user ID is " + userId);
 
+        if (!cookieOwner.equals(userId)){
+            Log.severe("Session validation failed: Cookie owner does not match user ID.");
+            return Result.error(FORBIDDEN);
+        }
         return Result.ok(cookieOwner);
     }
 }

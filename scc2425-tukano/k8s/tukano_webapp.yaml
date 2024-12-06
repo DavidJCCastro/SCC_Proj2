@@ -27,12 +27,22 @@ spec:
           value: postgres
         - name: DB_PASSWORD
           value: secret
+        - name: S3_ENDPOINT   # MinIO endpoint URL
+          value: http://minio-service:9000
+        - name: S3_ACCESS_KEY 
+          value: minioadmin
+        - name: S3_SECRET_KEY  
+          value: minioadmin
+        - name: S3_BUCKET
+          value: tukano-blobs
         - name: REDIS_HOSTNAME
           value: redis
         - name: REDIS_PORT
-          value: "6380"
+          value: "6379"
         - name: CACHE_STATUS
           value: "ON"
+        - name: REDIS_USE_TLS
+          value: "false"
 
 ---
 

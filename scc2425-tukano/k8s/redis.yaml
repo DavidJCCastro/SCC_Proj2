@@ -18,14 +18,14 @@ spec:
       - name: redis
         image: redis:latest
         ports:
-        - containerPort: 6380
+        - containerPort: 6379
         resources:
           requests:
-            memory: "256Mi"
-            cpu: "250m"
-          limits:
             memory: "512Mi"
             cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1"
 
 ---
 
@@ -38,6 +38,6 @@ spec:
     app: redis
   ports:
   - protocol: TCP
-    port: 6380
-    targetPort: 6380
+    port: 6379
+    targetPort: 6379
   type: ClusterIP
