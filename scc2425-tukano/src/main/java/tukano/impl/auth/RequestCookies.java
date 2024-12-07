@@ -20,7 +20,7 @@ public class RequestCookies {
         if (cookies == null) {
             throw new IllegalStateException("RequestCookies not set");
         }
-        Log.info(() -> "RequestCookies.get() - Cookies retrieved: " + cookies);
+        Log.info(() -> "RequestCookies.get() - Cookies retrieved: " + cookies + "\n");
         return requestCookiesThreadLocal.get();
     }
 

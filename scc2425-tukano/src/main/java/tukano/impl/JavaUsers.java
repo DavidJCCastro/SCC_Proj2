@@ -14,6 +14,7 @@ import static tukano.api.Result.errorOrResult;
 import static tukano.api.Result.ok;
 import tukano.api.User;
 import tukano.api.Users;
+import tukano.impl.auth.RequestCookies;
 import utils.DB;
 import utils.JSON;
 import utils.RedisCache;
@@ -91,15 +92,19 @@ public class JavaUsers implements Users {
 				jedis.del(USERS_PREFIX + userId);
 			}
 
-			// Delete user shorts and blobs asynchronously with a new Hibernate session
+			var cookies = RequestCookies.get();
 			Executors.defaultThreadFactory().newThread(() -> {
 				try {
-					DB.transaction(hibernate -> {
-						JavaShorts.getInstance().deleteAllShorts(userId, pwd, Token.get(userId));
-						JavaBlobs.getInstance().deleteAllBlobs(userId, Token.get(userId));
-					});
+					RequestCookies.set(cookies);
+					Log.info(() -> format("Attempting to delete all shorts for userId = %s", userId));
+					JavaShorts.getInstance().deleteAllShorts(userId, pwd, Token.get(userId));
+					Log.info(() -> format("Successfully deleted shorts for userId = %s", userId));
+			
+					Log.info(() -> format("Attempting to delete all blobs for userId = %s", userId));
+					JavaBlobs.getInstance().deleteAllBlobs(userId, Token.get(userId));
+					Log.info(() -> format("Successfully deleted blobs for userId = %s", userId));
 				} catch (Exception e) {
-					Log.severe("Error in asynchronous deletion: " + e.getMessage());
+					Log.severe(() -> "Error deleting user shorts and blobs: " + e.getMessage() + "\n");
 				}
 			}).start();
 
@@ -148,20 +153,20 @@ public class JavaUsers implements Users {
 
 			if (value != null) {
 				jedis.expire(key, USER_TTL);
-				Log.info(() -> "User found in Redis cache: " + userId);
+				Log.info(() -> "User found in Redis cache: " + userId + "\n");
 				return Result.ok(JSON.decode(value, User.class));
 			}
 		} catch (Exception e) {
-			Log.severe(() -> "Error accessing Redis: " + e.getMessage());
+			Log.severe(() -> "Error accessing Redis: " + e.getMessage() + "\n");
 		}
 
 		var dbResult = DB.getOne(userId, User.class);
 
 		if (dbResult.isOK()) {
 			cacheUser(dbResult.value());
-			Log.info(() -> "User found in DB and added to cache: " + userId);
+			Log.info(() -> "User found in DB and added to cache: " + userId + "\n");
 		} else {
-			Log.warning(() -> "User not found in DB: " + userId);
+			Log.warning(() -> "User not found in DB: " + userId + "\n");
 		}
 
 		return dbResult;
@@ -172,9 +177,9 @@ public class JavaUsers implements Users {
 			var key = USERS_PREFIX + user.getUserId();
 			var value = JSON.encode(user);
 			jedis.setex(key, USER_TTL, value);
-			Log.info(() -> "User cached: " + user.getUserId());
+			Log.info(() -> "User cached: " + user.getUserId() + "\n");
 		} catch (Exception e) {
-			Log.severe(() -> "Error caching user: " + e.getMessage());
+			Log.severe(() -> "Error caching user: " + e.getMessage() + "\n");
 		}
 	}
 }

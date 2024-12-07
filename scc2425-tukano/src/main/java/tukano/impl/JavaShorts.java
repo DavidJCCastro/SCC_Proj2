@@ -90,7 +90,7 @@ public class JavaShorts implements Shorts {
 				res = Result.ok(shrt);
 			}
 		} catch (Exception e) {
-			Log.severe(() -> "Error accessing Redis: " + e.getMessage());
+			Log.severe(() -> "Error accessing Redis: " + e.getMessage() + "\n");
 		}
 
 		// Fallback to DB if Redis fails or cache miss
@@ -216,17 +216,25 @@ public class JavaShorts implements Shorts {
 
 		return DB.transaction((hibernate) -> {
 
-			// delete shorts
+			Log.info(() -> "Deleting all shorts, follows and likes for user: " + userId);
+
+			// Delete shorts
 			var query1 = format("DELETE FROM Short WHERE ownerId = '%s'", userId);
-			hibernate.createQuery(query1, Short.class).executeUpdate();
+			Log.info(() -> "Deleting all shorts for user: " + userId);
+			hibernate.createNativeQuery(query1, Short.class).executeUpdate();
+			Log.info(() -> "Successfully deleted all shorts for user: " + userId);
 
-			// delete follows
+			// Delete follows
 			var query2 = format("DELETE FROM Following WHERE follower = '%s' OR followee = '%s'", userId, userId);
-			hibernate.createQuery(query2, Following.class).executeUpdate();
+			Log.info(() -> "Deleting all follows for user: " + userId);
+			hibernate.createNativeQuery(query2, Following.class).executeUpdate();
+			Log.info(() -> "Successfully deleted all follows for user: " + userId);
 
-			// delete likes
-			var query3 = format("DELETE FROM Like WHERE ownerId = '%s' OR userId = '%s'", userId, userId);
-			hibernate.createQuery(query3, Likes.class).executeUpdate();
+			// Delete likes
+			var query3 = format("DELETE FROM Likes WHERE ownerId = '%s' OR userId = '%s'", userId, userId);
+			Log.info(() -> "Deleting all likes for user: " + userId);
+			hibernate.createNativeQuery(query3, Likes.class).executeUpdate();
+			Log.info(() -> "Successfully deleted all likes for user: " + userId);
 
 		});
 	}

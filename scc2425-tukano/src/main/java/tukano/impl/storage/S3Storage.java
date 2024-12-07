@@ -1,6 +1,7 @@
 package tukano.impl.storage;
 
 import java.io.IOException;
+import static java.lang.String.format;
 import java.net.URI;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
@@ -15,6 +16,8 @@ import software.amazon.awssdk.services.s3.model.BucketAlreadyOwnedByYouException
 import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
@@ -42,7 +45,7 @@ public class S3Storage implements BlobStorage {
         try {
             s3Client.createBucket(CreateBucketRequest.builder().bucket(bucketName).build());
         } catch (BucketAlreadyOwnedByYouException | BucketAlreadyExistsException e) {
-            Log.info("Bucket already exists");
+            Log.info("Bucket already exists \n");
         }
     }
 
@@ -53,10 +56,10 @@ public class S3Storage implements BlobStorage {
                     .bucket(bucketName)
                     .key(path)
                     .build(), RequestBody.fromBytes(bytes));
-                    Log.info("Uploaded object to S3");
+                    Log.info("Uploaded object to S3 \n");
             return ok();
         } catch (S3Exception e) {
-            Log.info("Failed to upload object to S3");
+            Log.info("Failed to upload object to S3 \n");
             e.printStackTrace();
             return error(INTERNAL_ERROR);
         }
@@ -69,13 +72,13 @@ public class S3Storage implements BlobStorage {
                     .bucket(bucketName)
                     .key(path)
                     .build());
-                    Log.info("Downloaded object from S3");
+                    Log.info("Downloaded object from S3 \n");
             return ok(response.readAllBytes());
         } catch (NoSuchKeyException e) {
-            Log.info("Object not found in S3");
+            Log.info("Object not found in S3 \n");
             return error(NOT_FOUND);
         } catch (S3Exception | IOException e) {
-            Log.info("Failed to download object from S3");
+            Log.info("Failed to download object from S3 \n");
             e.printStackTrace();
             return error(INTERNAL_ERROR);
         }
@@ -89,13 +92,13 @@ public class S3Storage implements BlobStorage {
                     .key(path)
                     .build());
             sink.accept(response.readAllBytes());
-            Log.info("Downloaded object from S3");
+            Log.info("Downloaded object from S3 \n");
             return ok();
         } catch (NoSuchKeyException e) {
-            Log.info("Object not found in S3");
+            Log.info("Object not found in S3 \n");
             return error(NOT_FOUND);
         } catch (S3Exception | IOException e) {
-            Log.info("Failed to download object from S3");
+            Log.info("Failed to download object from S3 \n");
             e.printStackTrace();
             return error(INTERNAL_ERROR);
         }
@@ -108,13 +111,47 @@ public class S3Storage implements BlobStorage {
                     .bucket(bucketName)
                     .key(path)
                     .build());
-            Log.info("Deleted object from S3");
+            Log.info("Deleted object from S3 \n");
             return ok();
         } catch (NoSuchKeyException e) {
-            Log.info("Object not found in S3");
+            Log.info("Object not found in S3 \n");
             return error(NOT_FOUND);
         } catch (S3Exception e) {
-            Log.info("Failed to delete object from S3");
+            Log.info("Failed to delete object from S3 \n");
+            e.printStackTrace();
+            return error(INTERNAL_ERROR);
+        }
+    }
+
+    @Override
+    public Result<Void> deleteAll(String prefix) {
+        try {
+            ListObjectsV2Request listObjectsRequest = ListObjectsV2Request.builder()
+                    .bucket(bucketName)
+                    .prefix(prefix)
+                    .build();
+
+            ListObjectsV2Response listObjectsResponse;
+            do {
+                listObjectsResponse = s3Client.listObjectsV2(listObjectsRequest);
+
+                for (var s3Object : listObjectsResponse.contents()) {
+                    s3Client.deleteObject(DeleteObjectRequest.builder()
+                            .bucket(bucketName)
+                            .key(s3Object.key())
+                            .build());
+                    Log.info(() -> format("Deleted object: %s\n", s3Object.key()));
+                }
+
+                listObjectsRequest = listObjectsRequest.toBuilder()
+                        .continuationToken(listObjectsResponse.nextContinuationToken())
+                        .build();
+            } while (listObjectsResponse.isTruncated());
+
+            Log.info(() -> format("Successfully deleted all objects with prefix: %s\n", prefix));
+            return ok();
+        } catch (S3Exception e) {
+            Log.severe(() -> "Failed to delete objects from S3: " + e.getMessage() + "\n");
             e.printStackTrace();
             return error(INTERNAL_ERROR);
         }
