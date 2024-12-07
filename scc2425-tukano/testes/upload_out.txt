@@ -1,0 +1,42 @@
+Test run id: t86dz_6webqpm6zaxf977gbnejygfzpdrj4_3khk
+Parsed 201 rows
+Parsed 201 rows
+Parsed 201 rows
+Parsed 201 rows
+Parsed 201 rows
+Parsed 201 rows
+Parsed 201 rows
+Phase started: Warm up (index: 0, duration: 10s) 20:23:40(+0000)
+
+Phase completed: Warm up (index: 0, duration: 10s) 20:23:50(+0000)
+
+--------------------------------------
+Metrics for period to: 20:23:50(+0000) (width: 8.206s)
+--------------------------------------
+
+errors.Cannot set properties of undefined (setting 'userId'): .................. 25
+vusers.created: ................................................................ 25
+vusers.created_by_name.Upload short: ........................................... 25
+vusers.failed: ................................................................. 25
+
+
+--------------------------------------
+Metrics for period to: 20:24:00(+0000) (width: 0.203s)
+--------------------------------------
+
+errors.Cannot set properties of undefined (setting 'userId'): .................. 5
+vusers.created: ................................................................ 5
+vusers.created_by_name.Upload short: ........................................... 5
+vusers.failed: ................................................................. 5
+
+
+All VUs finished. Total time: 11 seconds
+
+--------------------------------
+Summary report @ 20:23:52(+0000)
+--------------------------------
+
+errors.Cannot set properties of undefined (setting 'userId'): .................. 30
+vusers.created: ................................................................ 30
+vusers.created_by_name.Upload short: ........................................... 30
+vusers.failed: ................................................................. 30

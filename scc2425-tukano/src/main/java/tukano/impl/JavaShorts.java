@@ -136,7 +136,9 @@ public class JavaShorts implements Shorts {
 	public Result<List<String>> getShorts(String userId) {
 		Log.info(() -> format("getShorts : userId = %s\n", userId));
 
-		var query = format("SELECT shortId FROM Short WHERE ownerId = '%s'", userId);
+		//var query = format("SELECT shortId FROM Short WHERE ownerId = '%s'", userId);
+		var query = format("SELECT shortId FROM Short", userId);
+
 		return errorOrValue(okUser(userId), DB.sql(query, String.class));
 	}
 
@@ -155,7 +157,9 @@ public class JavaShorts implements Shorts {
 	public Result<List<String>> followers(String userId, String password) {
 		Log.info(() -> format("followers : userId = %s, pwd = %s\n", userId, password));
 
-		var query = format("SELECT follower FROM Following WHERE followee = '%s'", userId);
+		//var query = format("SELECT follower FROM Following WHERE followee = '%s'", userId);
+		var query = format("SELECT follower FROM Following", userId);
+
 		return errorOrValue(okUser(userId, password), DB.sql(query, String.class));
 	}
 
@@ -176,7 +180,8 @@ public class JavaShorts implements Shorts {
 
 		return errorOrResult(getShort(shortId), shrt -> {
 
-			var query = format("SELECT userId FROM Likes WHERE shortId = '%s'", shortId);
+		//	var query = format("SELECT userId FROM Likes WHERE shortId = '%s'", shortId);
+			var query = format("SELECT userId FROM Likes", shortId);
 
 			return errorOrValue(okUser(shrt.getOwnerId(), password), DB.sql(query, String.class));
 		});

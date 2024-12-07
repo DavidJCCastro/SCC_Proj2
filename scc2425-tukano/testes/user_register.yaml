@@ -1,5 +1,5 @@
 config:
-    target: http://127.0.0.1:8080/tukano/rest
+    target: http://192.168.49.2:30555/rest
     phases:
         - name: simple_post
           duration: 100

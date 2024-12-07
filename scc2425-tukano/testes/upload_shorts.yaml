@@ -1,5 +1,5 @@
 config:
-  target: http://127.0.0.1:8080/tukano/rest
+  target: http://192.168.49.2:31829/rest
   plugins:
     metrics-by-endpoint: {} # Used to get metrics for each endpoint individually.
   processor: ./test-utils.js
@@ -15,14 +15,11 @@ scenarios:
   - name: 'Upload short'
     weight: 10
     flow:
-      - function: "getLoginDetails"
+      #- function: "getLoginDetails"
       - post:
-          url: "/login"
-          form:
-            USER: "{{ userId }}"
-            PWD: "{{ pwd }}"
+          beforeRequest: "getLoginDetails"
+          url: "/login/{{ userId }}?pwd={{ pwd }}"
       - post:
-          #beforeRequest: "getLoginDetails"
           url: "/shorts/{{ userId }}?pwd={{ pwd }}"
           afterResponse: "processVideoAddReply"
       - post:

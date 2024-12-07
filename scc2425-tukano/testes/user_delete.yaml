@@ -1,5 +1,5 @@
 config:
-    target: http://127.0.0.1:8080/tukano/rest
+    target: http://192.168.49.2:31829/rest
     phases:
         - name: simple_post
           duration: 100
@@ -20,10 +20,7 @@ scenarios:
     - name: TuKanoDeleteUserFlow
       flow:
         - post:
-          url: "/login"
-          form:
-            USER: "admin"
-            PWD: "*** ADD PASSWORD ***"
+            url: "/login/admin?pwd=admin"
         - delete:
             url: "/users/{{ userId }}?pwd={{ pwd }}"
             headers:
