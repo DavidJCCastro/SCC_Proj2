@@ -360,3 +360,11 @@ O UI é actually fire
 Se for só dar um check básico para ver se esta a funcionar podes fazer só:
 
 kubectl exec -it <minio-deployment-pod> -- ls -la /data/tukano-blobs
+
+fiz um script para dar deploy fast. Script esta na main directory da app (deploy_tukano.sh).
+
+1. É preciso tornar o script executavél:
+chmod +x deploy_tukano.sh
+
+2. run that shii:
+./deploy_tukano.sh

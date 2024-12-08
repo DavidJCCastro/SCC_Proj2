@@ -1,13 +1,6 @@
 package tukano.impl.storage;
 
 
-import static tukano.api.Result.error;
-import static tukano.api.Result.ok;
-import static tukano.api.Result.ErrorCode.BAD_REQUEST;
-import static tukano.api.Result.ErrorCode.CONFLICT;
-import static tukano.api.Result.ErrorCode.INTERNAL_ERROR;
-import static tukano.api.Result.ErrorCode.NOT_FOUND;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -17,6 +10,12 @@ import java.util.Comparator;
 import java.util.function.Consumer;
 
 import tukano.api.Result;
+import static tukano.api.Result.ErrorCode.BAD_REQUEST;
+import static tukano.api.Result.ErrorCode.CONFLICT;
+import static tukano.api.Result.ErrorCode.INTERNAL_ERROR;
+import static tukano.api.Result.ErrorCode.NOT_FOUND;
+import static tukano.api.Result.error;
+import static tukano.api.Result.ok;
 import utils.Hash;
 import utils.IO;
 
@@ -75,6 +74,24 @@ public class FilesystemStorage implements BlobStorage {
 	
 	@Override
 	public Result<Void> delete(String path) {
+		if (path == null)
+			return error(BAD_REQUEST);
+
+		try {
+			var file = toFile( path );
+			Files.walk(file.toPath())
+			.sorted(Comparator.reverseOrder())
+			.map(Path::toFile)
+			.forEach(File::delete);
+		} catch (IOException e) {
+			e.printStackTrace();
+			return error(INTERNAL_ERROR);
+		}
+		return ok();
+	}
+
+	@Override
+	public Result<Void> deleteAll(String path) {
 		if (path == null)
 			return error(BAD_REQUEST);
 

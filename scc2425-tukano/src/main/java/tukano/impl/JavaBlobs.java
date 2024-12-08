@@ -52,20 +52,20 @@ public class JavaBlobs implements Blobs {
                 token));
 
         String userId = blobId.split("\\+")[0];
-        Log.info(() -> "Extracted userId: " + userId);
+        Log.info(() -> "Extracted userId: " + userId + "\n");
 
         var sessionValidation = JavaAuth.validateSession(userId);
         if (!sessionValidation.isOK()) {
-            Log.severe("Upload failed: Session validation failed for userId " + userId);
+            Log.severe("Upload failed: Session validation failed for userId " + userId + "\n");
             return error(FORBIDDEN);
         }
 
         if (!validBlobId(blobId, token)) {
-            Log.severe("Upload failed: Token validation failed for blobId " + blobId);
+            Log.severe("Upload failed: Token validation failed for blobId " + blobId + "\n");
             return error(FORBIDDEN);
         }
 
-        Log.info(() -> "Validation successful. Writing blob...");
+        Log.info(() -> "Validation successful. Writing blob... \n" );
         return storage.write(toPath(blobId), bytes);
     }
 
@@ -92,6 +92,7 @@ public class JavaBlobs implements Blobs {
         if (!validBlobId(blobId, token))
             return error(FORBIDDEN);
 
+        Log.info(() -> "Deleting blob: " + blobId + "\n");
         return storage.delete(toPath(blobId));
     }
 
@@ -105,7 +106,10 @@ public class JavaBlobs implements Blobs {
         if (!Token.isValid(token, userId))
             return error(FORBIDDEN);
 
-        return storage.delete(toPath(userId));
+        Log.info(() -> "Deleting all blobs for userId: " + userId + "\n");
+        Log.info(() -> "toPath(userId): " + toPath(userId) + "\n");
+
+        return storage.deleteAll(toPath(userId));
     }
 
     private boolean validBlobId(String blobId, String token) {

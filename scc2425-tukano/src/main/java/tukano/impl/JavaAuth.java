@@ -59,9 +59,9 @@ public class JavaAuth implements Auth {
         
         try (Jedis jedis = RedisCache.getCachePool().getResource()) {
             jedis.setex(cookie.getValue(), MAX_COOKIE_AGE, userId);
-            Log.info("Session stored in Redis: " + cookie.getValue() + " -> " + userId);
+            Log.info("Session stored in Redis: " + cookie.getValue() + " -> " + userId + "\n");
         } catch (Exception e) {
-            Log.severe("Redis error during session storage: " + e.getMessage());
+            Log.severe("Redis error during session storage: " + e.getMessage() + "\n");
             return Result.error(INTERNAL_ERROR);
         }
         /**
@@ -82,7 +82,7 @@ public class JavaAuth implements Auth {
 			var in = getClass().getClassLoader().getResourceAsStream(LOGIN_PAGE);
 			return  Result.ok(new String( in.readAllBytes()));			
 		} catch( Exception x ) {
-            Log.severe("Error reading login page: " + x.getMessage());
+            Log.severe("Error reading login page: " + x.getMessage() + "\n");
 			return Result.error( INTERNAL_ERROR );
 		}
 	}
@@ -97,25 +97,25 @@ public class JavaAuth implements Auth {
 	
 	static public Result<String> validateSession(Cookie cookie) {
         if (cookie == null) {
-            Log.severe("Session validation failed: No session cookie found.");
+            Log.severe("Session validation failed: No session cookie found. \n");
             return Result.error(NOT_FOUND);
         }
     
         final String[] cookieOwner = {""};
         try (Jedis jedis = RedisCache.getCachePool().getResource()) {
             cookieOwner[0] = jedis.get(cookie.getValue());
-            Log.info(() -> "Cookie value: " + cookie.getValue() + "Cookie owner: " + cookieOwner[0]);
+            Log.info(() -> "Cookie value: " + cookie.getValue() + "Cookie owner: " + cookieOwner[0] + "\n");
         } catch (Exception e) {
-            Log.severe("Redis error during session validation: " + e.getMessage());
+            Log.severe("Redis error during session validation: " + e.getMessage()+ "\n");
             return Result.error(INTERNAL_ERROR);
         }
     
         if (cookieOwner[0] == null || cookieOwner[0].isEmpty()) {
-            Log.severe("Session validation failed: Cookie owner not found or empty.");
+            Log.severe("Session validation failed: Cookie owner not found or empty. \n");
             return Result.error(NOT_FOUND);
         }
     
-        Log.info(() -> "Session validation succeeded: Cookie owner is " + cookieOwner[0]);
+        Log.info(() -> "Session validation succeeded: Cookie owner is " + cookieOwner[0] + "\n");
         return Result.ok(cookieOwner[0]);
     }
     
@@ -135,10 +135,10 @@ public class JavaAuth implements Auth {
 
         var cookieOwner = sessionResult.value();
 
-        Log.info(() -> "Session validation: Cookie owner is " + cookieOwner + ", user ID is " + userId);
+        Log.info(() -> "Session validation: Cookie owner is " + cookieOwner + ", user ID is " + userId + "\n");
 
         if (!cookieOwner.equals(userId)){
-            Log.severe("Session validation failed: Cookie owner does not match user ID.");
+            Log.severe("Session validation failed: Cookie owner does not match user ID. \n");
             return Result.error(FORBIDDEN);
         }
         return Result.ok(cookieOwner);

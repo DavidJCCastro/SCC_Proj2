@@ -39,15 +39,15 @@ public class RedisCache {
 	}
 
 	public synchronized static JedisPool getCachePool() {
-		Log.info("Initializing Redis connection pool...");
-		Log.info(() -> String.format("REDIS_HOSTNAME: %s", REDIS_HOSTNAME));
-		Log.info(() -> String.format("REDIS_PORT: %d", REDIS_PORT));
-		Log.info(() -> String.format("CACHE_STATUS: %s", CACHE_STATUS));
-		Log.info(() -> String.format("REDIS_TIMEOUT: %d", REDIS_TIMEOUT));
-		Log.info(() -> String.format("Redis_USE_TLS: %b", Redis_USE_TLS));
+		Log.info("Initializing Redis connection pool... \n");
+		Log.info(() -> String.format("REDIS_HOSTNAME: %s \n", REDIS_HOSTNAME));
+		Log.info(() -> String.format("REDIS_PORT: %d \n", REDIS_PORT));
+		Log.info(() -> String.format("CACHE_STATUS: %s \n", CACHE_STATUS));
+		Log.info(() -> String.format("REDIS_TIMEOUT: %d \n", REDIS_TIMEOUT));
+		Log.info(() -> String.format("Redis_USE_TLS: %b \n", Redis_USE_TLS));
 
 		if (instance != null) {
-			Log.info("Redis connection pool already initialized.");
+			Log.info("Redis connection pool already initialized. \n");
 			return instance;
 		}
 
@@ -65,11 +65,11 @@ public class RedisCache {
 			// Increase wait time for connections
 			poolConfig.setMaxWait(Duration.ofMillis(20000));
 			
-			Log.info("Creating new Redis connection pool...");
+			Log.info("Creating new Redis connection pool... \n");
 			instance = new JedisPool(poolConfig, REDIS_HOSTNAME, REDIS_PORT, REDIS_TIMEOUT, Redis_USE_TLS);
-			Log.info("Redis connection pool created successfully.");
+			Log.info("Redis connection pool created successfully. \n");
 		} catch (Exception e) {
-			Log.severe("Error initializing Redis connection pool: " + e.getMessage());
+			Log.severe("Error initializing Redis connection pool: " + e.getMessage() + "\n");
 			throw e;
 		}
 

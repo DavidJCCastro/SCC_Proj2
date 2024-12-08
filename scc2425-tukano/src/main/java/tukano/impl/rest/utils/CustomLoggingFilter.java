@@ -25,7 +25,7 @@ public class CustomLoggingFilter implements ContainerRequestFilter, ContainerRes
 		sb.append(" - Path: ").append(requestContext.getUriInfo().getPath());
 		sb.append(" - Header: ").append(requestContext.getHeaders());
 		sb.append(" - Entity: ").append(getEntityBody(requestContext));
-		Log.info("HTTP REQUEST : " + sb.toString());
+		Log.info("HTTP REQUEST : " + sb.toString() + "\n");
 	}
 
 	private String getEntityBody(ContainerRequestContext requestContext) {
@@ -57,7 +57,7 @@ public class CustomLoggingFilter implements ContainerRequestFilter, ContainerRes
 		StringBuilder sb = new StringBuilder();
 		sb.append("Header: ").append(responseContext.getHeaders());
 		sb.append(" - Entity (JSON): ").append( Entity.entity(responseContext.getEntity(), MediaType.APPLICATION_JSON).getEntity());
-		Log.info("HTTP RESPONSE : " + sb.toString());
+		Log.info("HTTP RESPONSE : " + sb.toString() + "\n");
 	}
 
 }

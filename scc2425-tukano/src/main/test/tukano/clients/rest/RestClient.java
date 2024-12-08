@@ -55,7 +55,7 @@ public class RestClient {
 				return func.get();
 			} catch (ProcessingException x) {
 				x.printStackTrace();
-				Log.fine("Timeout: " + x.getMessage());
+				Log.fine("Timeout: " + x.getMessage() + "\n");
 				Sleep.ms(RETRY_SLEEP);
 			} catch (Exception x) {
 				x.printStackTrace();
