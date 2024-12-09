@@ -1,5 +1,5 @@
 config:
-  target: http://127.0.0.1:8080/tukano/rest
+  target: http://192.168.49.2:30420/rest
   plugins:
     metrics-by-endpoint: {} # Used to get metrics for each endpoint individually.
   processor: ./test-utils.js
@@ -35,31 +35,25 @@ scenarios:
   - name: 'Upload short'
     weight: 10
     flow:
-      - function: "getLoginDetails"
       - post:
-          url: "/login"
-          form:
-            USER: "{{ userId }}"
-            PWD: "{{ pwd }}"
+          beforeRequest: "getLoginDetails"
+          url: "/login/{{ userId }}?pwd={{ pwd }}"
       - post:
-          #beforeRequest: "getLoginDetails"
           url: "/shorts/{{ userId }}?pwd={{ pwd }}"
           afterResponse: "processVideoAddReply"
       - post:
           beforeRequest: "uploadBlobBody"
-          url: "/blobs/{{ blobUrl }}"    
+          url: "/blobs/{{ blobUrl }}"
+            
 
   - name: "Download short"
     weight: 100
     flow:
-      - function: "getShortDownloadDetails"
       - post:
-          url: "/login"
-          form:
-            USER: "{{ userId }}"
-            PWD: "{{ pwd }}"
+          beforeRequest: "getLoginDetails"
+          url: "/login/{{ userId }}?pwd={{ pwd }}"
       - get:
-          #beforeRequest: "getShortDownloadDetails"
+          beforeRequest: "getShortDownloadDetails"
           url: "/shorts/{{ shortId }}"
           afterResponse: "processVideoGetReply"
       - get:

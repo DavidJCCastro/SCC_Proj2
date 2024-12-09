@@ -1,5 +1,5 @@
 config:
-    target: http://192.168.49.2:30555/rest
+    target: http://192.168.49.2:30420/rest
     phases:
         - name: simple_post
           duration: 100
