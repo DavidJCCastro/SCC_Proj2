@@ -1,19 +1,4 @@
 apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: postgres-pv
-spec:
-  capacity:
-    storage: 1Gi
-  accessModes:
-    - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Delete  # Automatically delete the PV when the PVC is deleted
-  storageClassName: standard
-  hostPath:  # For local Minikube development
-    path: /mnt/data/postgres
----
-
-apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: postgres-pvc
@@ -23,7 +8,7 @@ spec:
   resources:
     requests:
       storage: 1Gi
-  storageClassName: standard
+  storageClassName: managed-premium
 
 ---
 
@@ -43,6 +28,8 @@ spec:
       labels:
         app: postgres
     spec:
+      securityContext:
+        fsGroup: 999
       containers:
       - name: postgres-container
         image: postgres:latest
@@ -53,15 +40,18 @@ spec:
           value: secret
         - name: POSTGRES_DB
           value: tukano
+        - name: PGDATA
+          value: /var/lib/postgresql/data/db-data # Set PGDATA to a subdirectory
         ports:
         - containerPort: 5432
         volumeMounts:
-        - name: postgres-pvc
+        - name: postgres-storage
           mountPath: /var/lib/postgresql/data
       volumes:
-      - name: postgres-pvc
+      - name: postgres-storage
         persistentVolumeClaim:
           claimName: postgres-pvc
+
 
 ---
 

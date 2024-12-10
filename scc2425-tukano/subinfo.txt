@@ -1,0 +1,6 @@
+{
+  "appId": "237c3eb3-bcaa-44b0-a8d4-9ed01817813a",
+  "displayName": "http://tukano-60739-app",
+  "password": "lMS8Q~24Qh_Wn_DNv4_v9VKRFkOySSXl0ZglIcOi",
+  "tenant": "ae7e50a2-ed26-41f7-bd75-f49683f2433a"
+}
