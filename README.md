@@ -1,3 +1,20 @@
+Yaroslav Hayduk - 60739 - y.hayduk@campus.fct.unl.pt
+David Castro - 60973 - djc.castro@campus.fct.unl.pt
+
+
+
+
+
+
+
+--------------------------------
+
+
+
+
+
+
+
 
 1. mvn clean package
 2. docker build -t tukano-app:latest .  (tukano-app ou wtv que achares fitting).
