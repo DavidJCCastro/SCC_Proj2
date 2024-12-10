@@ -8,9 +8,9 @@ config:
     duration: 10
     arrivalRate: 1
     rampTo: 5
-  #- name: "Main test"    # MAIN TESTS: duration: 30s, with 10 new clients/sec. Should be varied depending on scenario.
-    #duration: 30
-    #arrivalRate: 10
+  - name: "Main test"    # MAIN TESTS: duration: 30s, with 10 new clients/sec. Should be varied depending on scenario.
+    duration: 30
+    arrivalRate: 10
 scenarios:
   - name: 'Register user'
     weight: 10

@@ -16,7 +16,8 @@ echo "Deleting existing deployments, services, and pods..."
 kubectl delete deployments,services,pods --all --ignore-not-found
 
 echo "Deleting persistent volumes and persistent volume claims..."
-kubectl delete pv,pvc --all --ignore-not-found
+kubectl delete pvc --all --ignore-not-found
+kubectl delete pv --all --ignore-not-found
 
 echo "Loading Docker image into Minikube..."
 minikube image load tukano-app:latest

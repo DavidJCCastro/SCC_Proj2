@@ -24,7 +24,7 @@ public class Token {
 	public static String get(String id) {
 		var timestamp = System.currentTimeMillis();
 		var signature = Hash.of(id, timestamp, secret);
-		Log.info(String.format("Get Short Token: signature: %s, id: %s, timestamp: %s, secret: %s\n", signature, id, timestamp, secret));
+		// Log.info(String.format("Get Short Token: signature: %s, id: %s, timestamp: %s, secret: %s\n", signature, id, timestamp, secret));
 		return String.format("%s%s%s", timestamp, DELIMITER, signature);
 	}
 
@@ -33,13 +33,13 @@ public class Token {
 			var bits = tokenStr.split(DELIMITER);
 			var timestamp = Long.valueOf(bits[0]);
 			var hmac = Hash.of(id, timestamp, secret);
-			Log.info(String.format("isValid: signature: %s, id: %s, timestamp: %s, secret: %s\n", hmac, id, timestamp, secret));
+			// Log.info(String.format("isValid: signature: %s, id: %s, timestamp: %s, secret: %s\n", hmac, id, timestamp, secret));
 			var elapsed = Math.abs(System.currentTimeMillis() - timestamp);			
-			Log.info(String.format("Token class: Token Validation - id: %s, token: %s \n", id, tokenStr));
+			// Log.info(String.format("Token class: Token Validation - id: %s, token: %s \n", id, tokenStr));
 
-			Log.info(String.format("hash ok:%s, elapsed %s ok: %s\n", hmac.equals(bits[1]), elapsed, elapsed < MAX_TOKEN_AGE));
+			// Log.info(String.format("hash ok:%s, elapsed %s ok: %s\n", hmac.equals(bits[1]), elapsed, elapsed < MAX_TOKEN_AGE));
 			
-			Log.info(String.format("tokenStr: %s, id: %s, secret: %s, \n\n timestamp: %s, \n hmac: %s, bits[1]: %s, \n elapsed: %s\n", tokenStr, id, secret, timestamp, hmac, bits[1], elapsed));
+			// Log.info(String.format("tokenStr: %s, id: %s, secret: %s, \n\n timestamp: %s, \n hmac: %s, bits[1]: %s, \n elapsed: %s\n", tokenStr, id, secret, timestamp, hmac, bits[1], elapsed));
 			return hmac.equals(bits[1]) && elapsed < MAX_TOKEN_AGE;			
 		} catch( Exception x ) {
 			x.printStackTrace();
